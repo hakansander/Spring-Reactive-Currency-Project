@@ -20,11 +20,8 @@ public class CurrencyExchangeController {
 
     @GetMapping(value = "/{baseCurrency}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<CurrencyResponseDto> getCurrencyValues(@PathVariable String baseCurrency) {
-
-        return Flux.interval(Duration.ofSeconds(20))
+        return Flux.interval(Duration.ofSeconds(1))
                 .map(it -> currencyExchangeService.getCurrencyExchangeValues(baseCurrency))
                 .doOnNext(it -> log.info("[getCurrencyValues] Method is returned :: it={}", it));
-
-
     }
 }
