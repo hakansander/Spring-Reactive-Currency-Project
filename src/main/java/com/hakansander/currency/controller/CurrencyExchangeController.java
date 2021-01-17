@@ -32,7 +32,7 @@ public class CurrencyExchangeController {
 
     @GetMapping(value = "/hakan", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ScrappedCurrency> getCurrencyValuesRealTime() {
-        return Flux.interval(Duration.ofSeconds(30))
+        return Flux.interval(Duration.ofSeconds(10))
                 .map(it -> webScrapper.scrap())
                 .delayElements(Duration.ofSeconds(1))
                 .doOnNext(it -> log.info("[getCurrencyValues] Method is returned :: it={}", it));
