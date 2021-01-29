@@ -4,6 +4,7 @@ import com.hakansander.currency.model.CurrencyResponse.CurrencyResponseDto;
 import com.hakansander.currency.model.CurrencyResponse.realTime.ScrappedCurrency;
 import com.hakansander.currency.scrapper.WebScrapper;
 import com.hakansander.currency.service.CurrencyExchangeService;
+import com.hakansander.currency.util.CurrencyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
+import java.util.List;
 
 @RestController
 @RequestMapping("/currency")
@@ -31,9 +33,17 @@ public class CurrencyExchangeController {
     }
 
     @GetMapping(value = "/hakan", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ScrappedCurrency> getCurrencyValuesRealTime() {
-        return Flux.interval(Duration.ofSeconds(10))
+    public Flux<List<ScrappedCurrency>> getCurrencyValuesRealTime() {
+        return Flux.interval(Duration.ofSeconds(1))
                 .map(it -> webScrapper.scrap())
+                .delayElements(Duration.ofSeconds(1))
+                .doOnNext(it -> log.info("[getCurrencyValues] Method is returned :: it={}", it));
+    }
+
+    @GetMapping(value = "/random", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<List<ScrappedCurrency>> getRandomCurrencyValues() {
+        return Flux.interval(Duration.ofSeconds(4))
+                .map(it -> CurrencyUtils.getRandomCurrencyList())
                 .delayElements(Duration.ofSeconds(1))
                 .doOnNext(it -> log.info("[getCurrencyValues] Method is returned :: it={}", it));
     }

@@ -7,13 +7,10 @@ import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.ConnectableFlux;
-import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +21,10 @@ public class WebScrapper {
     private ScrappedCurrency scrappedCurrency;
 
     private static final String URL = "https://www.investing.com/currencies/single-currency-crosses";
-    private static final String SCRAPPED_CLASS_NAME = "pid-18-bid";
+
+    private static final String SCRAPPED_CLASS_NAME_USD_TRY = "pid-18-bid";
+    private static final String SCRAPPED_CLASS_NAME_EUR_TRY = "pid-66-bid";
+    private static final String SCRAPPED_CLASS_NAME_GBP_TRY = "pid-97-bid";
 
     @PostConstruct
     private void runScrap() {
@@ -32,23 +32,7 @@ public class WebScrapper {
         //periodicallyScrap();
     }
 
-    public ConnectableFlux<ScrappedCurrency> getScrappedCurrency() {
-        return periodicallyScrap();
-    }
-
-    private ConnectableFlux<ScrappedCurrency> periodicallyScrap() {
-        ConnectableFlux<ScrappedCurrency> publish = Flux.interval(Duration.ofSeconds(60))
-                .map(it -> scrap())
-                .delayElements(Duration.ofMillis(10))
-                .doOnNext(it -> log.info("[getCurrencyValues] Method is returned :: it={}", it))
-                .publish();
-
-        publish.connect();
-
-        return publish;
-    }
-
-    public ScrappedCurrency scrap() {
+    public List<ScrappedCurrency> scrap() {
 
         log.info("[scrap] Method is called for scrapping the topics");
 
@@ -90,12 +74,20 @@ public class WebScrapper {
             log.error("[scrap] An exception occurred :: ", e);
         }
 
-        String targetValue = doc.getElementsByClass(SCRAPPED_CLASS_NAME).get(0).childNode(0).toString();
-
+        String targetValue = doc.getElementsByClass(SCRAPPED_CLASS_NAME_USD_TRY).get(0).childNode(0).toString();
         scrappedCurrency = new ScrappedCurrency("TRY", "USD", targetValue);
+        finalScrappedCurrency.add(scrappedCurrency);
 
-        log.info("[scrap] Scrapped the currency data :: currency={}", getScrappedCurrency());
+        targetValue = doc.getElementsByClass(SCRAPPED_CLASS_NAME_EUR_TRY).get(0).childNode(0).toString();
+        scrappedCurrency = new ScrappedCurrency("TRY", "EUR", targetValue);
+        finalScrappedCurrency.add(scrappedCurrency);
 
-        return scrappedCurrency;
+        targetValue = doc.getElementsByClass(SCRAPPED_CLASS_NAME_GBP_TRY).get(0).childNode(0).toString();
+        scrappedCurrency = new ScrappedCurrency("TRY", "GBP", targetValue);
+        finalScrappedCurrency.add(scrappedCurrency);
+
+        log.info("[scrap] Scrapped the currency data :: currency={}", finalScrappedCurrency);
+
+        return finalScrappedCurrency;
     }
 }
